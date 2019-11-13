@@ -3361,6 +3361,8 @@
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="Content\myImages\" />
+    <Folder Include="Custom\Resources\Images\ProductImages\" />
+    <Folder Include="Custom\Resources\Images\UserImages\" />
     <Folder Include="Models\" />
   </ItemGroup>
   <ItemGroup>
