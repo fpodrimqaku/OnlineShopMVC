@@ -1,0 +1,66 @@
+﻿@{
+    /**/
+
+    ViewBag.Title = "Contact";
+}
+<h2>@ViewBag.Title.</h2>
+<h3>@ViewBag.Message</h3>
+@using Kendo.Mvc.UI;
+
+<address>
+    One Microsoft Way<br />
+    Redmond, WA 98052-6399<br />
+    <abbr title="Phone">P:</abbr>
+    425.555.0100
+</address>
+
+<address>
+    <strong>Support:</strong>   <a href="mailto:Support@example.com">Support@example.com</a><br />
+    <strong>Marketing:</strong> <a href="mailto:Marketing@example.com">Marketing@example.com</a>
+</address>
+
+
+@(Html.Kendo().Grid<WebApplication1.Custom.Models.Person>()
+            .Name("grid")
+
+            .Columns(columns =>
+            {
+                columns.Bound(p => p.Id);
+                columns.Bound(p => p.First).Width(120);
+                columns.Bound(p => p.Last).Width(120);
+                columns.Bound(p => p.Email).Width(120);
+                columns.Bound(p => p.Image).Width(120);
+                columns.Command(command => { command.Destroy(); }).Width(250);
+            })
+            .ToolBar(toolbar => toolbar.Create())
+            .Editable(editable => editable.Mode(GridEditMode.InLine).ConfirmDelete("test").DisplayDeleteConfirmation("Test"))
+            .Pageable()
+            .Sortable()
+            .Scrollable()
+            .HtmlAttributes(new { style = "height:550px;" })
+            .DataSource(dataSource => dataSource
+                .Ajax()
+                .PageSize(20)
+                .Events(events => events.Error("error_handler"))
+                .Model(model => model.Id(p => p.Id))
+                .Create(update => update.Action("InsertPerson", "Grid"))
+                .Read(read => read.Action("getPeople", "Grid"))
+                .Destroy(update => update.Action("DeletePerson", "Grid",3243242))
+            )
+)
+<script type="text/javascript">
+    function error_handler(e) {
+        if (e.errors) {
+            var message = "Errors:\n";
+            $.each(e.errors, function (key, value) {
+                if ('errors' in value) {
+                    $.each(value.errors, function () {
+                        message += this + "\n";
+                    });
+                }
+            });
+            alert(message);
+        }
+    }
+</script>
+

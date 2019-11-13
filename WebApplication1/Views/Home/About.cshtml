@@ -1,0 +1,1005 @@
+﻿
+@{
+    ViewBag.Title = "About";
+}
+@using Kendo.Mvc.UI
+<h2>@ViewBag.Title.</h2>
+<h3>@ViewBag.Message</h3>
+
+
+
+<script src="@Url.Content("~/Scripts/pako.js")"></script>
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/jszip/2.4.0/jszip.min.js"></script>
+
+<div class="demo-section k-cotent">
+    @(Html.Kendo().Grid<WebApplication1.Custom.Models.Customer>
+                                                                      ()
+                                                                      .Name("grid")
+                                                                      .ToolBar(tools => tools.Excel())
+                                                        .Pageable()
+                                                        .Sortable()
+                                                        .Groupable()
+                                                        .Excel(excel => excel
+                                                            .FileName("Kendo UI Grid Export.xlsx")
+                                                            .Filterable(true)
+                                                            .ProxyURL(Url.Action("Pdf_Export_Save", "Grid"))
+
+                                                    )
+                                                    .ToolBar(toolbar => toolbar.Pdf())
+
+                                                                  .HtmlAttributes(new { style = "width : 100%; margin:auto;" })
+                                                          .Pdf(pdf => pdf
+                                                              .AllPages()
+                                                              .AvoidLinks()
+                                                              .PaperSize("A4")
+                                                              .Scale(0.8)
+                                                              .Margin("2cm", "1cm", "1cm", "1cm")
+                                                              .Landscape()
+                                                              .RepeatHeaders()
+                                                              .TemplateId("page-template")
+                                                              .FileName("Kendo UI Grid Export.pdf")
+                                                              .ProxyURL(Url.Action("Pdf_Export_Save", "Grid"))
+
+                                                          ).Excel(e => e.AllPages(true))
+                                                                  .Columns(columns =>
+                                                                  {
+                                                                      columns.Bound(c => c.id).Title("cLIENT iD").Filterable(false)
+                                                                      .ClientTemplate(
+                                                                                                                                     @"<div class='customer-photo'
+style='background-image: url(" + @Url.Content("~/Content/images/asd.jpg") + ");'></div><div class='customer-name'>#: id #</div>")
+                                                               .Width(240);
+
+                                                                      columns.Bound(c => c.name).Filterable(filterable => filterable.Multi(true)
+                                                                      .DataSource(ds => ds.Read(r => r.Action("GenerateUnique", "Grid").Data("{ field: 'name' }"))));
+                                                                      columns.Bound(e => e.status)
+                                                                      .Filterable(filterable => filterable.Multi(true)
+                                                                      .DataSource(ds => ds.Read(r => r.Action("GenerateUnique", "Grid").Data("{ field: 'status' }"))));
+
+                                                                      columns.Bound(c => c.age).Filterable(filterable => filterable.Multi(true)
+
+                                                                     .DataSource(ds => ds.Read(r => r.Action("GenerateUnique", "Grid").Data("{ field: 'age' }"))));
+
+                                                                      columns.Command(command => command.Destroy()).Width(150);
+                                                                      columns.Command(c => c.Custom("AlertButton").Text("Alert"));
+                                                                  })
+                                                         .HtmlAttributes(new { style = "height: 530px;" })
+                                                         .Scrollable(scr => scr.Height(100))
+                                                         .Selectable(selectable => selectable
+                                                            .Mode(GridSelectionMode.Single)
+                                                            .Type(GridSelectionType.Cell))
+                                                        .Navigatable()
+                                                                .Filterable(filterable => filterable.Extra(false))
+                                                                .Groupable()
+                                                                 .Filterable(filterable => filterable
+                                                                .Extra(false)
+                                                                .Operators(operators => operators
+                                                                    .ForString(str => str.Clear()
+                                                                        .StartsWith("Starts with")
+                                                                        .IsEqualTo("Is equal to")
+                                                                        .IsNotEqualTo("Is not equal to")
+                                                                    ))
+                                                                )
+                                                                .Pageable(
+                                                                pageable => pageable
+                                                                .Numeric(true)
+                                                                .PageSizes(true)
+                                                                .ButtonCount(5))
+                                                                .Sortable()
+                                                                .DataSource(dataSource => dataSource
+                                                                .Ajax()
+                                                                .Aggregates(aggregates =>
+                                                        {
+                                                            aggregates.Add(p => p.age).Min().Max().Count();
+
+                                                            aggregates.Add(p => p.name).Count();
+
+                                                        })
+                                                                .Read(read => read.Action("Products_Read", "Grid")).Model(m => m.Id(id => id.id))
+                                                                .Destroy(read => read.Action("Editing_Destroy", "Grid").Data("{ field: 'age' }"))
+                                                                .PageSize(5)
+                                                            .ServerOperation(true)
+
+                                                            )
+    )
+</div>
+
+
+
+
+
+
+<script type="text/javascript">
+    function itemTemplate(e) {
+        if (e.field == "all") {
+            //handle the check-all checkbox template
+            return "<div><label><strong><input type='checkbox' />#= all#</strong></label></div>";
+        } else {
+            //handle the other checkboxes
+            return "<span><label><input type='checkbox' name='" + e.field + "' value='#=Country#'/><span>#= Country #</span></label></span>"
+        }
+    }
+
+
+    function error_handler(e) {
+        if (e.errors) {
+            var message = "Errors:\n";
+            $.each(e.errors, function (key, value) {
+                if ('errors' in value) {
+                    $.each(value.errors, function () {
+                        message += this + "\n";
+                    });
+                }
+            });
+            alert(message);
+        }
+    }
+</script>
+
+
+
+
+<style>
+    .customer-photo {
+        display: inline-block;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-size: 32px 35px;
+        background-position: center center;
+        vertical-align: middle;
+        line-height: 32px;
+        box-shadow: inset 0 0 1px #999, inset 0 0 10px rgba(0,0,0,.2);
+        margin-left: 5px;
+    }
+
+    .customer-name {
+        display: inline-block;
+        vertical-align: middle;
+        line-height: 32px;
+        padding-left: 3px;
+    }
+</style>
+<p>Use this area to provide additional information.</p>
+
+
+
+<div class="demo-section k-content">
+    <h4>Balance</h4>
+    @(Html.Kendo().Slider()
+                                                                                                                            .Name("slider")
+                                                                                                                            .IncreaseButtonTitle("Right")
+                                                                                                                            .DecreaseButtonTitle("Left")
+                                                                                                                            .Min(-10)
+                                                                                                                            .Max(10)
+                                                                                                                            .SmallStep(2)
+                                                                                                                            .LargeStep(1)
+                                                                                                                            .HtmlAttributes(new { style = "width: 400px;" })
+                                                                                                                            .Value(0)
+                                                                                                                            .HtmlAttributes(new { @class = "balSlider", title = "Slider" }))
+    <h4 style="padding-top: 2em;">Equalizer</h4>
+    <div id="equalizer">
+        @(Html.Kendo().Slider()
+                                                                                                                                .Name("eqSlider1")
+                                                                                                                                .Orientation(SliderOrientation.Vertical)
+                                                                                                                                .Min(-20)
+                                                                                                                                .Max(20)
+                                                                                                                                .SmallStep(1)
+                                                                                                                                .LargeStep(20)
+                                                                                                                                .ShowButtons(false)
+                                                                                                                                .Value(10)
+
+                                                                                                                                .HtmlAttributes(new { @class = "eqSlider", title = "eqSlider1" }))
+
+
+        @(Html.Kendo().Slider()
+                                                                                                                                .Name("eqSlider2")
+                                                                                                                                .Orientation(SliderOrientation.Vertical)
+                                                                                                                                .Min(-20)
+                                                                                                                                .Max(20)
+                                                                                                                                .SmallStep(1)
+                                                                                                                                .LargeStep(20)
+                                                                                                                                .ShowButtons(false)
+                                                                                                                                .Value(5)
+                                                                                                                                .HtmlAttributes(new { @class = "eqSlider", title = "eqSlider2" }))
+
+        @(Html.Kendo().Slider()
+                                                                                                                                .Name("eqSlider3")
+                                                                                                                                .Orientation(SliderOrientation.Vertical)
+                                                                                                                                .Min(-20)
+                                                                                                                                .Max(20)
+                                                                                                                                .SmallStep(1)
+                                                                                                                                .LargeStep(20)
+                                                                                                                                .ShowButtons(false)
+                                                                                                                                .Value(0)
+                                                                                                                                .HtmlAttributes(new { @class = "eqSlider", title = "eqSlider3" }))
+
+        @(Html.Kendo().Slider()
+                                                                                                                                .Name("eqSlider4")
+                                                                                                                                .Orientation(SliderOrientation.Vertical)
+                                                                                                                                .Min(-20)
+                                                                                                                                .Max(20)
+                                                                                                                                .SmallStep(1)
+                                                                                                                                .LargeStep(20)
+                                                                                                                                .ShowButtons(false)
+                                                                                                                                .Value(10)
+                                                                                                                                .HtmlAttributes(new { @class = "eqSlider", title = "eqSlider4" }))
+
+        @(Html.Kendo().Slider()
+                                                                                                                                .Name("eqSlider5")
+                                                                                                                                .Orientation(SliderOrientation.Vertical)
+                                                                                                                                .Min(-20)
+                                                                                                                                .Max(20)
+                                                                                                                                .SmallStep(1)
+                                                                                                                                .LargeStep(20)
+                                                                                                                                .ShowButtons(false)
+                                                                                                                                .Value(15)
+                                                                                                                                .HtmlAttributes(new { @class = "eqSlider", title = "eqSlider5" }))
+    </div>
+</div>
+
+<style>
+    .demo-section {
+        text-align: center;
+    }
+
+    #equalizer {
+        padding-right: 15px;
+    }
+
+    div.balSlider {
+        width: 100%;
+    }
+
+        div.balSlider .k-slider-selection {
+            display: none;
+        }
+
+    div.eqSlider {
+        display: inline-block;
+        margin: 1em;
+        height: 122px;
+        vertical-align: top;
+    }
+</style>
+
+
+<div class="date">
+    <div class="demo-section k-content">
+        <h4>Show e-mails from:</h4>
+        @(Html.Kendo().DatePicker()
+                                                                                                                                  .Name("datepicker")
+                                                                                                                                  .Value("10/10/2011")
+                                                                                                                                  .HtmlAttributes(new { style = "width: 100%", title = "datepicker" })
+        )
+        <h4 style="margin-top: 2em;">Add to archive mail from:</h4>
+        @(Html.Kendo().DatePicker()
+                                                                                                                                      .Name("monthpicker")
+                                                                                                                                      .Start(CalendarView.Year)
+                                                                                                                                      .Depth(CalendarView.Year)
+                                                                                                                                      .Format("MMMM yyyy")
+                                                                                                                                      .Value("November 2011")
+                                                                                                                                      .DateInput()
+                                                                                                                                      .HtmlAttributes(new { style = "width: 100%", title = "monthpicker" })
+        )
+    </div>
+</div>
+
+<style>
+    .date {
+        height: 500px;
+        width: 50%;
+        margin: auto;
+    }
+</style>
+
+
+
+
+<div class="demo-section k-content wide">
+    @(Html.Kendo().Chart()
+                                                                                                                        .Name("chart")
+                                                                                                                        .Title("Site Visitors Stats \n /thousands/")
+                                                                                                                        .Legend(legend => legend
+                                                                                                                            .Visible(false)
+                                                                                                                        )
+                                                                                                                        .ChartArea(chartArea => chartArea
+                                                                                                                            .Background("transparent")
+                                                                                                                        )
+                                                                                                                        .Series(series =>
+                                                                                                                        {
+                                                                                                                            series.Bar(new double[] { 56000, 63000, 74000, 91000, 117000, 138000 }).Name("Total Visits");
+                                                                                                                            series.Bar(new double[] { 52000, 34000, 23000, 48000, 67000, 83000 }).Name("Unique visitors");
+                                                                                                                            series.Bar(new double[] { 52000, 34000, 23000, 48000, 67000, 83000 }).Name("Oragnic visitors");
+                                                                                                                        })
+                                                                                                                        .CategoryAxis(axis => axis
+                                                                                                                            .Categories("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Dec")
+                                                                                                                            .MajorGridLines(lines => lines.Visible(false))
+                                                                                                                        )
+                                                                                                                        .ValueAxis(axis => axis
+                                                                                                                            .Numeric()
+                                                                                                                            .Max(140000)
+                                                                                                                            .Line(line => line.Visible(false))
+                                                                                                                            .MajorGridLines(lines => lines.Visible(true))
+                                                                                                                        )
+                                                                                                                        .Tooltip(tooltip => tooltip
+                                                                                                                            .Visible(true)
+                                                                                                                            .Template("#= series.name #: #= value # kkkk")
+                                                                                                                        )
+    )
+</div>
+
+<div id="cap-view" class="demo-section k-content">
+    <h4>Customize your Kendo Cap</h4>
+    <div id="cap" class="black-cap"></div>
+    <h4>@Html.Label("color", "Cap Color")</h4>
+    @(Html.Kendo().DropDownList()
+                                                                                                                  .Name("color")
+                                                                                                                  .DataTextField("Text")
+                                                                                                                  .DataValueField("Value")
+                                                                                                                  .Events(e => e.Change("change"))
+                                                                                                                  .BindTo(new List<SelectListItem>() {
+new SelectListItem() {
+Text = "Black",
+Value = "1"
+},
+new SelectListItem() {
+Text = "Orange",
+Value = "2"
+},
+new SelectListItem() {
+Text = "Grey",
+Value = "3"
+}
+                                                                                                                  })
+                                                                                                                  .Value("1")
+                                                                                                                  .HtmlAttributes(new { style = "width: 50%;margin:auto;" })
+
+    )
+
+    <h4 style="margin-top: 2em;">@Html.Label("size", "Cap Size")</h4>
+    @(Html.Kendo().DropDownList()
+                                                                                                                  .Name("size")
+                                                                                                                  .BindTo(new List<string>() {
+"S - 6 3/4\"",
+"M - 7 1/4\"",
+"L - 7 1/8\"",
+"XL - 7 5/8\""
+                                                                                                                  })
+                                                                                                                 .HtmlAttributes(new { style = "width: 100%" })
+    )
+
+    <button class="k-button k-primary" id="get" style="margin-top: 2em; float: right;">Customize</button>
+</div>
+<style>
+    #cap {
+        width: 242px;
+        height: 225px;
+        margin: 20px auto;
+        background-image: url('@Url.Content("~/Content/web/dropdownlist/cap.png")');
+        background-repeat: no-repeat;
+        background-color: transparent;
+    }
+    .black-cap {
+        background-position: 0 0;
+    }
+    .grey-cap {
+        background-position: 0 -225px;
+    }
+    .orange-cap {
+        background-position: 0 -450px;
+    }
+</style>
+
+<script>
+    function change() {
+        var value = $("#color").val();
+        $("#cap")
+            .toggleClass("black-cap", value == 1)
+            .toggleClass("orange-cap", value == 2)
+            .toggleClass("grey-cap", value == 3);
+    };
+
+    $(document).ready(function () {
+        $("#get").click(function () {
+            var color = $("#color").data("kendoDropDownList"),
+                size = $("#size").data("kendoDropDownList");
+
+            alert('Thank you! Your Choice is:\n\nColor ID: ' + color.value() + ' and Size: ' + size.value());
+        });
+    });
+</script>
+
+
+<div class="box">
+    <h4>Information</h4>
+    <p>
+        The Upload can be used as a drop-in replacement
+        for file input elements. This "synchronous" mode does not require
+        special handling on the server.
+    </p>
+</div>
+<form method="post" action='@Url.Action("Basic_Usage_Submit","Grid")'>
+    <div class="demo-section k-content">
+        @(Html.Kendo().Upload()
+                                                                                                            .Name("files")
+                                                                                                            .HtmlAttributes(new { aria_label = "files", style = " margin:auto; width:50% " })
+
+        )
+        <p style="padding-top: 1em; text-align: right">
+            <button type="submit" class="k-button k-primary">Submit</button>
+        </p>
+    </div>
+</form>
+
+
+<div class="demo-section k-content">
+    <h4>Uploaded files</h4>
+
+    @if (TempData.ContainsKey("UploadedFiles"))
+    {
+        <div class="t-widget t-upload">
+            <ul class="t-upload-files t-reset">
+                @foreach (var attachment in (IEnumerable<string>)TempData["UploadedFiles"])
+                {
+                    <li class="t-file"><span class="t-icon t-success"></span>@attachment</li>
+                }
+            </ul>
+        </div>
+    }
+    else
+    {
+
+    }
+
+    <p style="margin-top: 1em;">
+        <a href='@Url.Action("Index", "Grid")' class="k-button k-primary">Go back</a>
+    </p>
+
+
+    <h1> @(Html.Kendo().Barcode().Name("manchego").Value("8886725").Encoding(BarcodeSymbology.EAN8).Width(280).Height(100))</h1>
+
+
+    <h1>   @(Html.Kendo().Barcode().Name("mascarpone").Value("Mascarpone").Encoding(BarcodeSymbology.Code128).Width(280).Height(100))</h1>
+
+
+
+
+    <div class="demo-section">
+        <h3>Geo Location</h3>
+        @(
+                                                                                                                                                                                                                                    Html.Kendo().QRCode()
+                                                                                                                                                                                                                                        .Name("qrGeoLocation")
+                                                                                                                                                                                                                                        .Value("geo:42.65049,23.37925,100")
+                                                                                                                                                                                                                                        .ErrorCorrection(QRErrorCorrectionLevel.L)
+                                                                                                                                                                                                                                        .Size(120)
+                                                                                                                                                                                                                                        .Color("#166a83")
+        )
+    </div>
+
+
+
+    <div class="demo-section k-content">
+        <h4>@Html.Label("countries", "Choose shipping countries:")</h4>
+
+        @(Html.Kendo().AutoComplete()
+                                                                                                                                                                                                                              .Name("countries")
+                                                                                                                                                                                                                              .Filter("startswith")
+                                                                                                                                                                                                                              .Placeholder("Select country...")
+                                                                                                                                                                                                                              .BindTo(new string[] {
+                "Albania",
+                "Andorra",
+                "Armenia",
+                "Austria",
+                "Azerbaijan",
+                "Belarus",
+                "Belgium",
+                "Bosnia & Herzegovina",
+                "Bulgaria",
+                "Croatia",
+                "Cyprus",
+                "Czech Republic",
+                "Denmark",
+                "Estonia",
+                "Finland",
+                "France",
+                "Georgia",
+                "Germany",
+                "Greece",
+                "Hungary",
+                "Iceland",
+                "Ireland",
+                "Italy",
+                "Kosovo",
+                "Latvia",
+                "Liechtenstein",
+                "Lithuania",
+                "Luxembourg",
+                "Macedonia",
+                "Malta",
+                "Moldova",
+                "Monaco",
+                "Montenegro",
+                "Netherlands",
+                "Norway",
+                "Poland",
+                "Portugal",
+                "Romania",
+                "Russia",
+                "San Marino",
+                "Serbia",
+                "Slovakia",
+                "Slovenia",
+              "Spain",
+                "Sweden",
+                "Switzerland",
+                "Turkey",
+                "Ukraine",
+                "United Kingdom",
+                "Vatican City"
+                                                                                                                                                                                                                              })
+                                                                                                                                                                                                                              .Separator(",")
+        )
+
+        <div class="demo-hint">Start typing the name of an European country</div>
+
+    </div>
+
+    <style>
+        .k-autocomplete {
+            width: 50%;
+            margin: auto;
+        }
+    </style>
+
+
+
+
+    <div class="demo-section k-content">
+        <h4>Find a product</h4>
+        @(Html.Kendo().AutoComplete()
+                                                                                                                                                                                                                                      .Name("products")
+                                                                                                                                                                                                                                      .DataTextField("name")
+                                                                                                                                                                                                                                      .Filter("contains")
+                                                                                                                                                                                                                                      .MinLength(1)
+                                                                                                                                                                                                                                      .HtmlAttributes(new { style = "width:100%" })
+                                                                                                                                                                                                                                     .DataSource(source => source
+                                                                                                                                                                                                                      .Custom()
+                                                                                                                                                                                                                      .Group(g => g.Add("Country", typeof(string)))
+                                                                                                                                                                                                                      .Transport(transport => transport
+                                                                                                                                                                                                                        .Read(read =>
+                                                                                                                                                                                                                        {
+                                                                                                                                                                                                                            read.Action("NamesAutocomplete", "Grid")
+                                                                                                                                                                                                                                .Data("onAdditionalData");
+                                                                                                                                                                                                                        }))
+                                                                                                                                                                                                                      .ServerFiltering(true))
+        )
+        <div class="demo-hint">Hint: type "che"</div>
+    </div>
+    <script>
+        function onAdditionalData() {
+            return {
+                text: $("#products").val()
+            };
+        }
+    </script>
+
+
+
+    <div class="demo-section hidden-on-narrow k-content wide">
+        <div id="background">
+            <div class="column">
+                <h3 class="title"><label for="palette">Select Wall Paint</label></h3>
+                @(Html.Kendo().ColorPalette()
+                                                                                                                                                                                                                    .Name("palette")
+                                                                                                                                                                                                   .Events(events => events.Change("preview"))
+                )
+            </div>
+
+            <div class="column">
+                <h3 class="title"><label for="picker">Choose Custom Color</label></h3>
+                @(Html.Kendo().ColorPicker()
+                                                                                                                                                                                                                    .Name("picker")
+                                                                                                                                                                                                                    .Value("#ffffff")
+                                                                                                                                                                                                                    .Events(events => events.Select("preview"))
+                )
+            </div>
+        </div>
+    </div>
+
+    <div class="responsive-message"></div>
+
+    <script>
+        function preview(e) {
+            $("#background").css("background-color", e.value);
+        }
+    </script>
+
+
+
+    <div class="picker-wrapper">
+        <h4>Tail color</h4>
+        @(Html.Kendo().FlatColorPicker()
+                                                                                                                                                                                                    .Name("tail")
+                                                                                                                                                                                                    .HtmlAttributes(new { @class = "picker" })
+                                                                                                                                                                                                    .Value("#000")
+                                                                                                                                                                                                    .Events(ev => ev.Change("select"))
+                                                                                                                                                                                                    .Preview(false)
+        )
+    </div>
+
+
+
+    <div id="tshirt-view" class="demo-section k-content">
+        <h4>Customize your Kendo T-shirt</h4>
+        <img id="tshirt" alt="T-shirt image" src="@Url.Content("~/Content/web/combobox/tShirt.png")" />
+        <h4>@Html.Label("fabric", "T-shirt Fabric")</h4>
+        @(Html.Kendo().ComboBox()
+                                                                                                                                                                                              .Name("fabric")
+                                                                                                                                                                                              .Filter("contains")
+                                                                                                                                                                                              .Placeholder("Select fabric...")
+                                                                                                                                                                                              .DataTextField("Text")
+                                                                                                                                                                                              .DataValueField("Value")
+                                                                                                                                                                                              .BindTo(new List<SelectListItem>() {
+              new SelectListItem() {
+                Text = "Cotton", Value = "1"
+              },
+              new SelectListItem() {
+                Text = "Polyester", Value = "2"
+              },
+              new SelectListItem() {
+                Text = "Cotton/Polyester", Value = "3"
+              },
+              new SelectListItem() {
+                Text = "Rib Knit", Value = "4"
+              }
+                                                                                                                                                                                              })
+                                                                                                                                                                                              .SelectedIndex(3)
+                                                                                                                                                                                              .Suggest(true)
+                                                                                                                                                                                              .HtmlAttributes(new { style = "width:100%;" })
+
+        )
+
+        <h4 style="margin-top: 2em;">@Html.Label("size", "T-shirt Size")</h4>
+        @(Html.Kendo().ComboBox()
+                                                                                                                                                                                              .Name("size")
+                                                                                                                                                                                              .Placeholder("Select size...")
+                                                                                                                                                                                              .BindTo(new List<string>() {
+              "X-Small",
+              "Small",
+              "Medium",
+              "Large",
+              "X-Large",
+              "2X-Large"
+                                                                                                                                                                                              })
+                                                                                                                                                                                              .SelectedIndex(0)
+                                                                                                                                                                                              .Suggest(true)
+                                                                                                                                                                                              .HtmlAttributes(new { style = "width:100%;" })
+        )
+
+        <button class="k-button k-primary" id="get" style="">Customize</button>
+    </div>
+    <style>
+        #tshirt {
+            display: block;
+        }
+
+        .k-readonly {
+            color: gray;
+        }
+    </style>
+
+    <script>
+        $(document).ready(function () {
+            var fabric = $("#fabric").data("kendoComboBox");
+            var size = $("#size").data("kendoComboBox");
+
+            $("#get").click(function () {
+                alert('Thank you! Your Choice is:\n\nFabric ID: ' + fabric.value() + ' and Size: ' + size.value());
+            });
+        });
+    </script>
+
+    <div class="demo-section k-content">
+        @(Html.Kendo().ButtonGroup()
+                                                                                           .Name("select-period")
+                                                                                           .Items(t =>
+                                                                                           {
+                                                                                               t.Add().Text("Here");
+                                                                                               t.Add().Text("Or Here");
+                                                                                               t.Add().Text("Even here");
+                                                                                           })
+                                                                                            .Events(ev => ev.Select(""))
+        )
+    </div>
+
+    <style>
+        .demo-section {
+            text-align: center;
+        }
+    </style>
+
+
+    <div class="demo-section k-content">
+        @(Html.Kendo().ButtonGroup()
+                                                                                   .Name("player")
+                                                                                   .Items(t =>
+                                                                                   {
+                                                                                       t.Add().Text("Month").Badge("4").Icon("play");
+                                                                                       t.Add().Text("Quarter").Icon("pause");
+                                                                                       t.Add().Text("Year").Icon("stop");
+                                                                                   })
+                                                                                   .Events(ev => ev.Select("onSelect"))
+        )
+    </div>
+
+    <div class="box">
+        <h4>Console log</h4>
+        <div class="console"></div>
+    </div>
+
+    <script>
+        function onSelect(e) {
+            kendoConsole.log("selected index:" + e.indices);
+        }
+
+        function valueFunc() {
+
+            return 4;
+        }
+    </script>
+
+    <style>
+        .demo-section {
+            text-align: center;
+        }
+    </style>
+
+
+    <div class="demo-section k-content">
+        <ul id="fieldlist">
+            <li>
+                <label for="phone_number">Phone number:</label>
+                @(Html.Kendo().MaskedTextBox()
+                                                                                              .Name("phone_number")
+                                                                                              .Mask("(999) 000-0000")
+                                                                                              .Value("555 123 4567")
+                )
+            </li>
+            <li>
+                <label for="credit_card">Credit Card number:</label>
+                @(Html.Kendo().MaskedTextBox()
+                                                                                              .Name("credit_card")
+                                                                                              .Mask("0000 0000 0000 0000")
+                                                                                              .Value("1234 1234 1234 1234")
+                )
+            </li>
+            <li>
+                <label for="ssn">Social security number:</label>
+                @(Html.Kendo().MaskedTextBox()
+                                                                                              .Name("ssn")
+                                                                                              .Mask("000-00-0000")
+                                                                                              .Value("003-12-3456")
+                )
+            </li>
+            <li>
+                <label for="postcode">UK postcode:</label>
+                @(Html.Kendo().MaskedTextBox()
+                                                                                              .Name("postcode")
+                                                                                              .Mask("L0L 0LL")
+                                                                                              .Value("W1N 1AC")
+                )
+            </li>
+            <li>
+                <label for="postcode">UK postcode:</label>
+                @(Html.Kendo().MaskedTextBox()
+                                                                                              .Name("phoneonumber")
+                                                                                              .Mask("000 000 000")
+
+                )
+            </li>
+
+        </ul>
+    </div>
+
+
+    <style>
+        #fieldlist {
+            margin: 0 0 -2em;
+            padding: 0;
+        }
+
+            #fieldlist li {
+                list-style: none;
+                padding-bottom: 2em;
+            }
+
+            #fieldlist label {
+                display: block;
+                padding-bottom: 1em;
+                font-weight: bold;
+                text-transform: uppercase;
+                font-size: 12px;
+                color: #444;
+            }
+
+            #fieldlist .k-maskedtextbox {
+                width: 100%;
+            }
+    </style>
+
+
+
+
+    <div id="example">
+        @(Html.Kendo().Dialog()
+                                            .Name("dialog")
+                                            .Title("Software Update")
+                                            .Content("<p>A new version of <strong>Kendo UI</strong> is available. Would you like to download and install it now?<p>")
+                                            .Width(400)
+                                            .Modal(!true)
+                                            .Actions(actions =>
+                                            {
+                                                actions.Add().Text("Skip this version").Action("doIt");
+                                                actions.Add().Text("Remind me later");
+                                                actions.Add().Text("Install update").Primary(true);
+                                            })
+                                            .Events(ev => ev.Close("onClose").Open("onOpen"))
+        )
+
+        @(Html.Kendo().Button()
+                                            .Name("showDialogBtn")
+                                            .HtmlAttributes(new { style = "display:none;", @class = "hide-on-narrow" })
+                                            .Content("Click here to open the dialog")
+                                            .Events(ev => ev.Click("showDialog"))
+        )
+    </div>
+
+    <script>
+        function onClose() {
+            $("#showDialogBtn").fadeIn();
+        }
+
+        function onOpen() {
+            $("#showDialogBtn").fadeOut();
+        }
+
+        function showDialog() {
+            $('#dialog').data("kendoDialog").open();
+        }
+
+
+        function doIt() {
+            alert("alerted");
+        }
+    </script>
+
+    <style>
+        #example {
+            min-height: 350px;
+        }
+    </style>
+
+
+    <div class="demo-section k-content">
+        <h4>Products</h4>
+
+        <label for="optional">Optional</label>
+        <div class="demo-section k-content">
+            <h4>Products</h4>
+
+            @(Html.Kendo().MultiSelect()
+                                          .Name("clients")
+                                          .DataTextField("name")
+                                          .DataValueField("age")
+                                          .Placeholder("Select clients. ..")
+                                          .AutoBind(false)
+                                          .Value(new[] { new { name = "Chang", age = 2 } })
+                                          .DataSource(source =>
+                                          {
+                                              source.Read(read =>
+                                              {
+                                                  read.Action("NamesAutocomplete", "Grid");
+                                              })
+                                              .ServerFiltering(true);
+                                          })
+            )
+        </div>
+    </div>
+    <script>
+
+
+        function getName() {
+            return new { text: $("#clients").val() }
+        }
+
+    </script>
+
+
+
+
+
+    <div class="demo-section k-content">
+        <h4>Products</h4>
+
+        <label for="optional">Optional</label>
+        <div class="demo-section k-content">
+            <h4>Products</h4>
+
+            @(Html.Kendo().MultiSelect()
+                                                  .Name("clients1")
+                                                  .DataTextField("name")
+                                                  .DataValueField("age")
+                                                  .Placeholder("Select clients. ..")
+                                                  .AutoBind(false)
+                                                  .Value(new[] { new { name = "Chang", age = 2 } })
+                                                 .DataSource(source => source
+                              .Custom()
+                              .Group(g => g.Add("id", typeof(string)))
+                              .Transport(transport => transport
+                                .Read(read =>
+                                {
+                                    read.Action("NamesAutocomplete", "Grid")
+                                        .Data("getName1");
+                                }))
+                              .ServerFiltering(true))
+            )
+        </div>
+    </div>
+    <script>
+
+
+        function getName1() {
+            return new { text: $("#clients1").val() }
+        }
+
+    </script>
+
+
+
+
+
+    <div class="demo-section k-content">
+        <h4>Products</h4>
+
+        <label for="optional">Optional</label>
+        <div class="demo-section k-content">
+            <h4>Products</h4>
+
+            @(Html.Kendo().MultiSelect()
+                                                  .Name("clients2")
+                                                  .DataTextField("name")
+                                                  .DataValueField("age")
+                                                  .Placeholder("Select clients. ..")
+                                                  .AutoBind(false)
+                                                  .Value(new[] { new { name = "Chang", age = 2 } })                      
+                                               .DataSource(source =>
+          {
+              source.Read(read =>
+              {
+                  read.Action("NamesAutocomplete", "Grid");
+              });
+          })
+          .Height(400)
+          .HeaderTemplate("<div class=\"dropdown-header k-widget k-header\">" +
+                        "<span>Photo</span>" +
+                        "<span>Contact info</span>" +
+                    "</div>")
+          .FooterTemplate("Total <strong>#: instance.dataSource.total() #</strong> items found")
+          .ItemTemplate("<span class=\"k-state-default\" style=\"height:30px;width:30px;background-image: url(" + Url.Content("~/Content/images/asd.jpg") + ");\" ></span>" +
+                    "<span class=\"k-state-default\"><h3>#: data.id #</h3><p>#: data.name #</p></span>")
+          .TagTemplate("<span class=\"selected-value\" style=\"background-image: url(" + Url.Content("~/Content/images/asd.jpg") + ");\" ></span>" +
+                       "<span>#: data.id #</span>")
+            )
+        </div>
+    </div>
+    <script>
+
+
+        function getName2() {
+            return new { text: $("#clients2").val() }
+        }
+
+    </script>
+
+  
