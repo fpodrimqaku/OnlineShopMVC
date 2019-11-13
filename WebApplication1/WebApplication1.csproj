@@ -227,9 +227,10 @@
     <Compile Include="Custom\Models\View.cs" />
     <Compile Include="Custom\Models\WageClass.cs" />
     <Compile Include="Custom\Models\WageCoefficient.cs" />
-    <Compile Include="Custom\Repositories\BaseRepository.cs" />
     <Compile Include="Custom\Repositories\CustomerRepository.cs" />
-    <Compile Include="Custom\Repositories\PersonRepository.cs" />
+    <Compile Include="Custom\Repositories\CartItemRepository.cs" />
+    <Compile Include="Custom\Repositories\ProductRepository.cs" />
+    <Compile Include="Custom\Repositories\ReceiptRepository.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
